@@ -251,3 +251,16 @@ h1 {
 
 .popup-form { margin-top: 18px; text-align: left; }
 .added { color: #8be04e; font-weight: 700; margin: 16px 0 0; }
+
+.keys { margin: 14px 0 0; color: #9a8cbc; font-size: 0.85rem; text-align: center; }
+.keys kbd {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 6px;
+  border: 1px solid #4a3a6e;
+  border-bottom-width: 2px;
+  background: #2a1d45;
+  color: #ddd3f5;
+  font: inherit;
+  font-size: 0.8rem;
+}

@@ -49,7 +49,7 @@ const DEFAULT_FIELDS: WheelField[] = [
   { emoji: '🙋', label: 'Spørsmålsmester', description: 'Den som svarer på et spørsmål fra {spiller} drikker – helt til neste spørsmålsmester.' },
   { emoji: '🎤', label: 'Sang', description: '{spiller} queuer sin guilty pleasure sang og synger med!.' },
   { emoji: '🥂', label: 'Hydration break', description: 'Alle drikker 5 slurker!' },
-  { emoji: '🪞', label: 'Speilet', description: '{spiller} velger en person som må herme etter alt du gjør til neste spinn.' },
+  { emoji: '🪞', label: 'Speilet', description: '{spiller} velger en person som må herme etter alt {spiller} gjør til neste spinn.' },
   { emoji: '🐔', label: 'Kyllingdansen', description: 'Alle reiser seg og gjør kyllingdansen i 10 sekunder. Den som er sist opp, drikker 3.' },
   { emoji: '✍️', label: 'Nytt felt', description: '{spiller} legger til et nytt felt på hjulet!', action: 'add-field' },
 ];
@@ -63,6 +63,7 @@ const DEFAULTS_ID = JSON.stringify(DEFAULT_FIELDS);
   imports: [FormsModule],
   templateUrl: './app.html',
   styleUrl: './app.css',
+  host: { '(document:keydown)': 'onKey($event)' },
 })
 export class App implements OnInit, OnDestroy {
   readonly tab = signal<'players' | 'fields'>('players');
@@ -71,6 +72,10 @@ export class App implements OnInit, OnDestroy {
   readonly fields = signal<WheelField[]>(DEFAULT_FIELDS);
   /** Who got the last personal task – used to avoid picking the same person twice in a row. */
   private lastPlayer: Player | null = null;
+  /** The field the wheel landed on last time. */
+  private lastField: WheelField | null = null;
+  /** Fields already landed on this round. A field comes back only once all the others have been hit. */
+  private usedFields = new Set<WheelField>();
 
   readonly rotation = signal(0);
   readonly spinning = signal(false);
@@ -218,6 +223,27 @@ export class App implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Keyboard controls: Space/Enter spins (or closes the result), Esc closes the result,
+   * A toggles auto-spin. Ignored while typing in a text field.
+   */
+  onKey(e: KeyboardEvent): void {
+    const t = e.target as HTMLElement | null;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+    if (e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;
+    this.unlockAudio();
+
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault(); // don't also "click" whatever button has focus
+      if (this.result()) this.closeResult();
+      else this.spin();
+    } else if (e.key === 'Escape') {
+      if (this.result()) this.closeResult();
+    } else if (e.key === 'a' || e.key === 'A') {
+      this.toggleAutoSpin();
+    }
+  }
+
   spin(): void {
     if (this.spinning() || this.fields().length === 0) return;
     this.result.set(null);
@@ -236,7 +262,7 @@ export class App implements OnInit, OnDestroy {
 
     const n = this.fields().length;
     const step = 360 / n;
-    const target = Math.floor(Math.random() * n);
+    const target = this.pickFieldIndex();
     const jitter = (Math.random() - 0.5) * step * 0.7;
     // Segment centre must end up at the top pointer (0deg).
     const desired = (((-(target * step + step / 2) + jitter) % 360) + 360) % 360;
@@ -273,6 +299,22 @@ export class App implements OnInit, OnDestroy {
     this.wheelAudio.currentTime = 0;
     this.audio.currentTime = 0;
     this.audio.play().catch(() => {});
+  }
+
+  /** Index of a random field not yet landed on this round; starts a new round when all are used. */
+  private pickFieldIndex(): number {
+    const all = this.fields();
+    let pool = all.map((_, i) => i).filter((i) => !this.usedFields.has(all[i]));
+    if (pool.length === 0) {
+      this.usedFields.clear();
+      pool = all.map((_, i) => i);
+      // Don't let the new round start with the field that ended the last one.
+      if (pool.length > 1) pool = pool.filter((i) => all[i] !== this.lastField);
+    }
+    const index = pool[Math.floor(Math.random() * pool.length)];
+    this.usedFields.add(all[index]);
+    this.lastField = all[index];
+    return index;
   }
 
   /** Random player, avoiding the one who got the previous personal task when possible. */
