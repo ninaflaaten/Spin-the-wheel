@@ -1,13 +1,13 @@
 <main (pointerdown)="unlockAudio()" (keydown)="unlockAudio()">
   <header>
-    <h1><span class="mug">🍻</span> Spin the Wheel <span class="mug flip">🍻</span></h1>
+    <h1><span class="mug">🍻</span> Spin the Wheel</h1>
   </header>
 
   <div class="layout">
     <section class="wheel-area">
       <p class="turn">
-        @if (currentPlayer(); as p) {
-          Det er <strong [style.color]="'#ffc93c'">{{ p.name }}</strong> sin tur!
+        @if (players().length) {
+          Hvem blir det denne gangen? 🤫
         } @else {
           Legg til spillere for å starte 🎉
         }
@@ -63,10 +63,10 @@
       </div>
 
       @if (tab() === 'players') {
-        <p class="hint">Hjulet velger tur etter tur i rekkefølge.</p>
+        <p class="hint">Hjulet velger først oppgaven – så trekkes en tilfeldig spiller. Gjelder oppgaven alle, trekkes ingen.</p>
         <ul class="list">
           @for (p of players(); track $index; let i = $index) {
-            <li [class.current]="currentPlayer() === p">
+            <li>
               <span class="pdot" [style.background]="p.color"></span>
               <span class="name">{{ p.name }}</span>
               <button class="remove" (click)="removePlayer(i)" aria-label="Fjern">✕</button>
@@ -115,6 +115,20 @@
         <div class="result-emoji">{{ r.field.emoji }}</div>
         <h2>{{ r.field.label }}</h2>
         <p class="result-text">{{ r.text }}</p>
+        @if (r.field.action === 'add-field') {
+          @if (fieldAdded()) {
+            <p class="added">✅ Feltet er lagt til på hjulet!</p>
+          } @else {
+            <form class="add field-form popup-form" (ngSubmit)="addFieldFromPopup()">
+              <div class="row">
+                <input class="emoji-in" name="pemoji" [(ngModel)]="popupEmoji" placeholder="🎉" maxlength="4" />
+                <input name="plabel" [(ngModel)]="popupLabel" placeholder="Navn på felt" autocomplete="off" />
+              </div>
+              <input name="pdesc" [(ngModel)]="popupDescription" placeholder="Beskrivelse – bruk {{ '{' }}spiller{{ '}' }} for navn" autocomplete="off" />
+              <button type="submit">Legg til på hjulet</button>
+            </form>
+          }
+        }
         <button class="spin-btn small" (click)="closeResult()">Neste!</button>
       </div>
     </div>

@@ -10,6 +10,8 @@ export interface WheelField {
   emoji: string;
   label: string;
   description: string;
+  /** Special behaviour: 'add-field' shows a form in the result so the player can add a field. */
+  action?: 'add-field';
 }
 
 interface Segment {
@@ -21,7 +23,7 @@ interface Segment {
 }
 
 const COLORS = ['#ff4f8b', '#ffc93c', '#8b5cf6', '#1fc6a5', '#ff7a2f', '#3bb4ff', '#d946ef', '#8be04e'];
-const AUTO_SPIN_SECONDS = 1 * 60; // TEST: sett tilbake til 5 * 60
+const AUTO_SPIN_SECONDS = 5 * 60;
 // wheel_spin.mp3 is 2.424 s – the wheel spins exactly as long as two plays of it.
 const SPIN_MS = 2 * 2424;
 const STORAGE_KEY = 'drikkespill-v1';
@@ -47,9 +49,14 @@ const DEFAULT_FIELDS: WheelField[] = [
   { emoji: '🙋', label: 'Spørsmålsmester', description: 'Den som svarer på et spørsmål fra {spiller} drikker – helt til neste spørsmålsmester.' },
   { emoji: '🎤', label: 'Sang', description: '{spiller} queuer sin guilty pleasure sang og synger med!.' },
   { emoji: '🥂', label: 'Hydration break', description: 'Alle drikker 5 slurker!' },
-
-
+  { emoji: '🪞', label: 'Speilet', description: '{spiller} velger en person som må herme etter alt du gjør til neste spinn.' },
+  { emoji: '🐔', label: 'Kyllingdansen', description: 'Alle reiser seg og gjør kyllingdansen i 10 sekunder. Den som er sist opp, drikker 3.' },
+  { emoji: '✍️', label: 'Nytt felt', description: '{spiller} legger til et nytt felt på hjulet!', action: 'add-field' },
 ];
+
+// Fingerprint of DEFAULT_FIELDS. When the defaults in the code change, fields saved
+// in the browser are discarded so the new defaults show up.
+const DEFAULTS_ID = JSON.stringify(DEFAULT_FIELDS);
 
 @Component({
   selector: 'app-root',
@@ -62,7 +69,8 @@ export class App implements OnInit, OnDestroy {
 
   readonly players = signal<Player[]>([]);
   readonly fields = signal<WheelField[]>(DEFAULT_FIELDS);
-  readonly turnIndex = signal(0);
+  /** Who got the last personal task – used to avoid picking the same person twice in a row. */
+  private lastPlayer: Player | null = null;
 
   readonly rotation = signal(0);
   readonly spinning = signal(false);
@@ -75,6 +83,11 @@ export class App implements OnInit, OnDestroy {
   newEmoji = '';
   newLabel = '';
   newDescription = '';
+  // Form in the result popup for the "Nytt felt" task.
+  readonly fieldAdded = signal(false);
+  popupEmoji = '';
+  popupLabel = '';
+  popupDescription = '';
 
   private timer?: ReturnType<typeof setInterval>;
   private audio = new Audio('party.mp3');
@@ -82,11 +95,6 @@ export class App implements OnInit, OnDestroy {
   private wheelAudio = new Audio('wheel_spin.mp3');
   private audioUnlocked = false;
   readonly warning = signal(false);
-
-  readonly currentPlayer = computed(() => {
-    const p = this.players();
-    return p.length ? p[this.turnIndex() % p.length] : null;
-  });
 
   readonly countdown = computed(() => {
     const s = this.secondsLeft();
@@ -122,7 +130,12 @@ export class App implements OnInit, OnDestroy {
   constructor() {
     this.load();
     effect(() => {
-      const data = { players: this.players(), fields: this.fields(), autoSpin: this.autoSpin() };
+      const data = {
+        players: this.players(),
+        fields: this.fields(),
+        autoSpin: this.autoSpin(),
+        defaults: DEFAULTS_ID,
+      };
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       } catch {}
@@ -143,7 +156,8 @@ export class App implements OnInit, OnDestroy {
       if (!raw) return;
       const data = JSON.parse(raw);
       if (Array.isArray(data.players)) this.players.set(data.players);
-      if (Array.isArray(data.fields) && data.fields.length) this.fields.set(data.fields);
+      const sameDefaults = data.defaults === DEFAULTS_ID;
+      if (sameDefaults && Array.isArray(data.fields) && data.fields.length) this.fields.set(data.fields);
       if (typeof data.autoSpin === 'boolean') this.autoSpin.set(data.autoSpin);
     } catch {}
   }
@@ -235,7 +249,10 @@ export class App implements OnInit, OnDestroy {
 
   private finishSpin(index: number): void {
     const field = this.fields()[index];
-    const player = this.currentPlayer();
+    // The player is kept secret until the task is known. Tasks without {spiller}
+    // are for everyone, so nobody is picked for them.
+    const personal = (field.description || '').includes('{spiller}');
+    const player = personal ? this.pickPlayer() : null;
     const name = player?.name ?? 'Du';
     const first = { field, player, text: (field.description || field.label).replaceAll('{spiller}', name) };
     this.result.set(first);
@@ -254,13 +271,34 @@ export class App implements OnInit, OnDestroy {
     this.spinning.set(false);
     this.wheelAudio.pause();
     this.wheelAudio.currentTime = 0;
-    if (this.players().length) this.turnIndex.update((i) => (i + 1) % this.players().length);
-
     this.audio.currentTime = 0;
     this.audio.play().catch(() => {});
   }
 
+  /** Random player, avoiding the one who got the previous personal task when possible. */
+  private pickPlayer(): Player | null {
+    const all = this.players();
+    if (!all.length) return null;
+    const pool = all.length > 1 ? all.filter((p) => p !== this.lastPlayer) : all;
+    const picked = pool[Math.floor(Math.random() * pool.length)];
+    this.lastPlayer = picked;
+    return picked;
+  }
+
+  addFieldFromPopup(): void {
+    const label = this.popupLabel.trim();
+    if (!label) return;
+    this.fields.update((f) => [
+      ...f,
+      { emoji: this.popupEmoji.trim() || '🎉', label, description: this.popupDescription.trim() },
+    ]);
+    this.popupEmoji = this.popupLabel = this.popupDescription = '';
+    this.fieldAdded.set(true);
+  }
+
   closeResult(): void {
+    this.fieldAdded.set(false);
+    this.popupEmoji = this.popupLabel = this.popupDescription = '';
     this.result.set(null);
   }
 
@@ -273,9 +311,9 @@ export class App implements OnInit, OnDestroy {
   }
 
   removePlayer(i: number): void {
+    const removed = this.players()[i];
     this.players.update((p) => p.filter((_, idx) => idx !== i));
-    const len = this.players().length;
-    this.turnIndex.update((t) => (len === 0 ? 0 : t > i ? t - 1 : t % len));
+    if (this.lastPlayer === removed) this.lastPlayer = null;
   }
 
   addField(): void {
