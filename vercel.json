@@ -1,5 +1,5 @@
 {
-  "installCommand": "cd drikkespill && npm install",
-  "buildCommand": "cd drikkespill && npm run build",
-  "outputDirectory": "drikkespill/dist/drikkespill/browser"
+  "installCommand": "npm install",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/drikkespill/browser"
 }
