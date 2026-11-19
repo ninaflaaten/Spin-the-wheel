@@ -1,0 +1,122 @@
+<main (pointerdown)="unlockAudio()" (keydown)="unlockAudio()">
+  <header>
+    <h1><span class="mug">🍻</span> Spin the Wheel <span class="mug flip">🍻</span></h1>
+  </header>
+
+  <div class="layout">
+    <section class="wheel-area">
+      <p class="turn">
+        @if (currentPlayer(); as p) {
+          Det er <strong [style.color]="'#ffc93c'">{{ p.name }}</strong> sin tur!
+        } @else {
+          Legg til spillere for å starte 🎉
+        }
+      </p>
+
+      <div class="wheel-wrap">
+        <div class="pointer"></div>
+        <svg
+          class="wheel"
+          viewBox="-205 -205 410 410"
+          [style.transform]="'rotate(' + rotation() + 'deg)'"
+          [class.spinning]="spinning()"
+        >
+          <circle r="204" fill="#2a1d45" />
+          @for (s of segments(); track $index) {
+            <path [attr.d]="s.path" [attr.fill]="s.color" stroke="#1d1430" stroke-width="1.5" />
+          }
+          @for (s of segments(); track $index) {
+            <g [attr.transform]="'rotate(' + s.textRotate + ')'">
+              <text
+                x="190"
+                y="0"
+                text-anchor="end"
+                dominant-baseline="central"
+                class="seg-label"
+                [attr.font-size]="wheelFontSize()"
+              >{{ s.field.emoji }} {{ s.short }}</text>
+            </g>
+          }
+        </svg>
+        <div class="hub">🍺</div>
+      </div>
+
+      <button class="spin-btn" (click)="spin()" [disabled]="spinning()">
+        {{ warning() ? 'Gjør dere klare…' : spinning() ? 'Snurrer…' : 'SNURR!' }}
+      </button>
+
+      <div class="auto">
+        <button class="auto-toggle" [class.on]="autoSpin()" (click)="toggleAutoSpin()">
+          <span class="dot"></span>
+          Auto-snurr {{ autoSpin() ? 'på' : 'av' }}
+        </button>
+        @if (autoSpin()) {
+          <span class="countdown">Neste automatiske snurr om <strong>{{ countdown() }}</strong></span>
+        }
+      </div>
+    </section>
+
+    <aside class="panel">
+      <div class="tabs">
+        <button [class.active]="tab() === 'players'" (click)="tab.set('players')">Spillere</button>
+        <button [class.active]="tab() === 'fields'" (click)="tab.set('fields')">Felter på hjulet</button>
+      </div>
+
+      @if (tab() === 'players') {
+        <p class="hint">Hjulet velger tur etter tur i rekkefølge.</p>
+        <ul class="list">
+          @for (p of players(); track $index; let i = $index) {
+            <li [class.current]="currentPlayer() === p">
+              <span class="pdot" [style.background]="p.color"></span>
+              <span class="name">{{ p.name }}</span>
+              <button class="remove" (click)="removePlayer(i)" aria-label="Fjern">✕</button>
+            </li>
+          } @empty {
+            <li class="empty">Ingen spillere ennå</li>
+          }
+        </ul>
+        <form class="add" (ngSubmit)="addPlayer()">
+          <input name="player" [(ngModel)]="newPlayer" placeholder="Navn på spiller" autocomplete="off" />
+          <button type="submit">Legg til</button>
+        </form>
+      } @else {
+        <p class="hint">Bruk <code>{{ '{' }}spiller{{ '}' }}</code> i beskrivelsen for å sette inn navnet.</p>
+        <ul class="list fields">
+          @for (f of fields(); track $index; let i = $index) {
+            <li>
+              <span class="emoji">{{ f.emoji }}</span>
+              <span class="name">{{ f.label }}</span>
+              <button class="remove" (click)="removeField(i)" [disabled]="fields().length <= 2" aria-label="Fjern">✕</button>
+            </li>
+          }
+        </ul>
+        <form class="add field-form" (ngSubmit)="addField()">
+          <div class="row">
+            <input class="emoji-in" name="emoji" [(ngModel)]="newEmoji" placeholder="🎉" maxlength="4" />
+            <input name="label" [(ngModel)]="newLabel" placeholder="Navn på felt" autocomplete="off" />
+          </div>
+          <input name="desc" [(ngModel)]="newDescription" placeholder="Beskrivelse (valgfritt)" autocomplete="off" />
+          <div class="row">
+            <button type="button" class="ghost" (click)="resetFields()">Tilbakestill</button>
+            <button type="submit">Legg til</button>
+          </div>
+        </form>
+      }
+    </aside>
+  </div>
+
+  @if (result(); as r) {
+    <div class="overlay" (click)="closeResult()">
+      <div class="result" [class.sike]="r.sike" (click)="$event.stopPropagation()">
+        <div class="confetti">🎉</div>
+        @if (r.player) {
+          <p class="result-player" [style.color]="r.player.color">{{ r.player.name }}</p>
+        }
+        <div class="result-emoji">{{ r.field.emoji }}</div>
+        <h2>{{ r.field.label }}</h2>
+        <p class="result-text">{{ r.text }}</p>
+        <button class="spin-btn small" (click)="closeResult()">Neste!</button>
+      </div>
+    </div>
+  }
+</main>
