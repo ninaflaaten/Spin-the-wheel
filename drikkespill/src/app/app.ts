@@ -72,6 +72,8 @@ export class App implements OnInit, OnDestroy {
   private lastPlayer: Player | null = null;
   /** The field the wheel landed on last time. */
   private lastField: WheelField | null = null;
+  /** Increases on every spin – lets delayed popups know if the wheel has been spun since. */
+  private spinCount = 0;
   /** Fields already landed on this round. A field comes back only once all the others have been hit. */
   private usedFields = new Set<WheelField>();
 
@@ -249,6 +251,7 @@ export class App implements OnInit, OnDestroy {
     if (this.spinning() || this.fields().length === 0) return;
     this.result.set(null);
     this.spinning.set(true);
+    this.spinCount++;
     if (!fromTimer) {
       this.rotate();
       return;
@@ -298,6 +301,21 @@ export class App implements OnInit, OnDestroy {
           sike: true,
         });
       }, 1800);
+    }
+    // "Fisk!": 10 s later the game catches you anyway – shown even if the popup was closed,
+    // but not if the wheel has been spun again in the meantime.
+    if (field.label.trim().toLowerCase() === 'fisk!') {
+      const spinAtFish = this.spinCount;
+      setTimeout(() => {
+        const current = this.result();
+        if (this.spinCount !== spinAtFish || (current !== null && current !== first)) return;
+        this.result.set({
+          field: { emoji: '🎣', label: 'Aa du ble tatt på fæsken!', description: '' },
+          player: null,
+          text: 'Drikk 5 slurker!',
+          sike: true,
+        });
+      }, 10_000);
     }
     this.spinning.set(false);
     this.wheelAudio.pause();
