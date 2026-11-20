@@ -45,6 +45,7 @@ h1 {
   position: relative;
   width: min(440px, 88vw);
   aspect-ratio: 1;
+  container-type: inline-size; /* lets the pointer and hub scale with the wheel (cqw) */
   border-radius: 50%;
   box-shadow: 0 0 60px rgba(255, 79, 139, 0.35), 0 0 0 10px #2a1d45;
 }
@@ -61,14 +62,14 @@ h1 {
 }
 .pointer {
   position: absolute;
-  top: -14px;
+  top: -3.2cqw;
   left: 50%;
   transform: translateX(-50%);
   width: 0;
   height: 0;
-  border-left: 18px solid transparent;
-  border-right: 18px solid transparent;
-  border-top: 34px solid #ffc93c;
+  border-left: 4.1cqw solid transparent;
+  border-right: 4.1cqw solid transparent;
+  border-top: 7.7cqw solid #ffc93c;
   filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.5));
   z-index: 2;
 }
@@ -82,7 +83,7 @@ h1 {
   background: radial-gradient(circle at 35% 30%, #fff, #d9d4e6);
   display: grid;
   place-items: center;
-  font-size: clamp(1.2rem, 4vw, 1.8rem);
+  font-size: 7cqw;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
 }
 
@@ -103,21 +104,24 @@ h1 {
 .spin-btn:disabled { filter: grayscale(0.4) brightness(0.8); cursor: default; }
 .spin-btn.small { font-size: 1.15rem; padding: 12px 40px; margin-top: 18px; }
 
-.auto {
+.settings {
   margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #3a2c58;
+}
+.auto {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
   flex-wrap: wrap;
-  justify-content: center;
-  color: #c9bde6;
-  font-size: 0.95rem;
+  color: #b3a6d3;
+  font-size: 0.82rem;
 }
 .auto-toggle {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 14px;
+  padding: 4px 10px;
   border-radius: 999px;
   border: 1px solid #4a3a6e;
   background: #2a1d45;
@@ -252,7 +256,8 @@ h1 {
 .popup-form { margin-top: 18px; text-align: left; }
 .added { color: #8be04e; font-weight: 700; margin: 16px 0 0; }
 
-.keys { margin: 14px 0 0; color: #9a8cbc; font-size: 0.85rem; text-align: center; }
+.keys { margin: 10px 0 0; color: #8a7cac; font-size: 0.75rem; display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.keys span { white-space: nowrap; }
 .keys kbd {
   display: inline-block;
   padding: 1px 7px;
@@ -262,5 +267,28 @@ h1 {
   background: #2a1d45;
   color: #ddd3f5;
   font: inherit;
-  font-size: 0.8rem;
+  font-size: 0.72rem;
 }
+
+/* ---------- Størrelse ----------
+   --z skalerer tekst, knapper og panel på store skjermer.
+   Hjulet skaleres ikke med --z, men fyller plassen som er igjen i høyden/bredden. */
+main { --z: 1; }
+header, .turn, .spin-btn, .panel, .result { zoom: var(--z); }
+
+@media (min-width: 900px) {
+  .wheel-wrap {
+    /* 130px = padding/marger, 200px*z = tittel + turtekst + SNURR-knapp */
+    width: min(
+      calc(100vh - 130px - 200px * var(--z)),
+      calc(100vw - 110px - 340px * var(--z))
+    );
+    min-width: 360px;
+  }
+}
+
+@media (min-width: 1500px) and (min-height: 1000px) { main { --z: 1.2; } }
+@media (min-width: 1800px) and (min-height: 1150px) { main { --z: 1.4; } }
+@media (min-width: 2200px) and (min-height: 1350px) { main { --z: 1.65; } }
+@media (min-width: 2600px) and (min-height: 1600px) { main { --z: 1.9; } }
+@media (min-width: 3400px) and (min-height: 2000px) { main { --z: 2.4; } }

@@ -171,7 +171,7 @@ export class App implements OnInit, OnDestroy {
     if (next <= 0) {
       this.secondsLeft.set(AUTO_SPIN_SECONDS);
       this.result.set(null);
-      this.spin();
+      this.spin(true);
     } else {
       this.secondsLeft.set(next);
     }
@@ -242,10 +242,15 @@ export class App implements OnInit, OnDestroy {
     }
   }
 
-  spin(): void {
+  /** @param fromTimer true when auto-spin triggers it – only then the warning sound plays first. */
+  spin(fromTimer = false): void {
     if (this.spinning() || this.fields().length === 0) return;
     this.result.set(null);
     this.spinning.set(true);
+    if (!fromTimer) {
+      this.rotate();
+      return;
+    }
     this.warning.set(true);
     this.playWarning().then(() => {
       this.warning.set(false);

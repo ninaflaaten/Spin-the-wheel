@@ -44,20 +44,6 @@
       <button class="spin-btn" (click)="spin()" [disabled]="spinning()">
         {{ warning() ? 'Gjør dere klare…' : spinning() ? 'Snurrer…' : 'SNURR!' }}
       </button>
-
-      <div class="auto">
-        <button class="auto-toggle" [class.on]="autoSpin()" (click)="toggleAutoSpin()">
-          <span class="dot"></span>
-          Auto-snurr {{ autoSpin() ? 'på' : 'av' }}
-        </button>
-        @if (autoSpin()) {
-          <span class="countdown">Neste automatiske snurr om <strong>{{ countdown() }}</strong></span>
-        }
-      </div>
-
-      <p class="keys">
-        <kbd>Mellomrom</kbd> snurr / neste · <kbd>Esc</kbd> lukk · <kbd>A</kbd> auto-snurr
-      </p>
     </section>
 
     <aside class="panel">
@@ -106,6 +92,23 @@
           </div>
         </form>
       }
+
+      <div class="settings">
+        <div class="auto">
+          <button class="auto-toggle" [class.on]="autoSpin()" (click)="toggleAutoSpin()">
+            <span class="dot"></span>
+            Auto-snurr {{ autoSpin() ? 'på' : 'av' }}
+          </button>
+          @if (autoSpin()) {
+            <span class="countdown">Neste om <strong>{{ countdown() }}</strong></span>
+          }
+        </div>
+        <p class="keys">
+          <span><kbd>Mellomrom</kbd> snurr / neste</span>
+          <span><kbd>Esc</kbd> lukk</span>
+          <span><kbd>A</kbd> auto‑snurr</span>
+        </p>
+      </div>
     </aside>
   </div>
 
