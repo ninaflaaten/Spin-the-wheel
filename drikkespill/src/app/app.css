@@ -36,6 +36,19 @@ h1 {
   align-items: flex-start;
   margin-top: 24px;
 }
+@media (min-width: 900px) {
+  /* Panel further right, vertically centred next to the wheel */
+  /* Wheel centred on the page; panel centred in the space to its right */
+  .layout {
+    --gap: clamp(24px, 3vw, 120px);
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: var(--gap);
+    align-items: center;
+  }
+  .wheel-area { grid-column: 2; }
+  .panel { grid-column: 3; justify-self: center; }
+}
 
 /* ---------- Wheel ---------- */
 .wheel-area { display: flex; flex-direction: column; align-items: center; }
@@ -85,6 +98,12 @@ h1 {
   place-items: center;
   font-size: 7cqw;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+.hub-face {
+  display: inline-block;
+  line-height: 1;
+  transition: transform 4.848s cubic-bezier(0.12, 0.7, 0.1, 1);
 }
 
 .spin-btn {
@@ -256,19 +275,6 @@ h1 {
 .popup-form { margin-top: 18px; text-align: left; }
 .added { color: #8be04e; font-weight: 700; margin: 16px 0 0; }
 
-.keys { margin: 10px 0 0; color: #8a7cac; font-size: 0.75rem; display: flex; flex-wrap: wrap; gap: 6px 14px; }
-.keys span { white-space: nowrap; }
-.keys kbd {
-  display: inline-block;
-  padding: 1px 7px;
-  border-radius: 6px;
-  border: 1px solid #4a3a6e;
-  border-bottom-width: 2px;
-  background: #2a1d45;
-  color: #ddd3f5;
-  font: inherit;
-  font-size: 0.72rem;
-}
 
 /* ---------- Størrelse ----------
    --z skalerer tekst, knapper og panel på store skjermer.
@@ -281,7 +287,7 @@ header, .turn, .spin-btn, .panel, .result { zoom: var(--z); }
     /* 130px = padding/marger, 200px*z = tittel + turtekst + SNURR-knapp */
     width: min(
       calc(100vh - 130px - 200px * var(--z)),
-      calc(100vw - 110px - 340px * var(--z))
+      calc(100vw - 40px - 2 * (var(--gap) + 340px * var(--z)))
     );
     min-width: 360px;
   }

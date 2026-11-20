@@ -37,7 +37,7 @@ const DEFAULT_FIELDS: WheelField[] = [
   { emoji: '🎁', label: 'Gi bort 3 slurker', description: '{spiller} deler ut 3 slurker – til én person eller fordelt.' },
   { emoji: '🥂', label: 'Alle drikker!', description: 'Skål! Alle drikker.' },
   { emoji: '🌊', label: 'Waterfall', description: '{spiller} begynner å drikke, så alle andre etter tur. Du kan ikke stoppe før personen før deg stopper.' },
-  { emoji: '📚', label: 'Fisk!', description: 'Førstemann som får fisken til å synge får dele ut 10 slurker!' },
+  { emoji: '🎣', label: 'Fisk!', description: 'Førstemann som får fisken til å synge får dele ut 10 slurker!' },
   { emoji: '🙊', label: 'Jeg har aldri...', description: '{spiller} sier «Jeg har aldri ...». Alle som har gjort det, drikker.' },
   { emoji: '📜', label: 'Regelmaker', description: '{spiller} lager en ny regel som gjelder resten av kvelden. Bryter du den, drikker du.' },
   { emoji: '👍', label: 'Tommelmester', description: '{spiller} kan når som helst legge tommelen på bordet. Den siste som følger etter, drikker.' },
@@ -76,6 +76,8 @@ export class App implements OnInit, OnDestroy {
   private usedFields = new Set<WheelField>();
 
   readonly rotation = signal(0);
+  /** The face in the hub spins along with the wheel, but always lands upright (whole turns). */
+  readonly hubRotation = computed(() => Math.ceil(this.rotation() / 360) * 360);
   readonly spinning = signal(false);
   readonly result = signal<{ field: WheelField; player: Player | null; text: string; sike?: boolean } | null>(null);
 
