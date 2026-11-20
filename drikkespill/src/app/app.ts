@@ -49,7 +49,6 @@ const DEFAULT_FIELDS: WheelField[] = [
   { emoji: '🎤', label: 'Sang', description: '{spiller} queuer sin guilty pleasure sang og synger med!.' },
   { emoji: '🥂', label: 'Hydration break', description: 'Alle drikker 5 slurker!' },
   { emoji: '🪞', label: 'Speilet', description: '{spiller} velger en person som må herme etter alt {spiller} gjør til neste spinn.' },
-  { emoji: '🐔', label: 'Kyllingdansen', description: 'Alle reiser seg og gjør kyllingdansen i 10 sekunder. Den som er sist opp, drikker 3.' },
   { emoji: '✍️', label: 'Nytt felt', description: '{spiller} legger til et nytt felt på hjulet!', action: 'add-field' },
 ];
 
