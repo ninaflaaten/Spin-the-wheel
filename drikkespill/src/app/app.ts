@@ -41,7 +41,6 @@ const DEFAULT_FIELDS: WheelField[] = [
   { emoji: '🙊', label: 'Jeg har aldri...', description: '{spiller} sier «Jeg har aldri ...». Alle som har gjort det, drikker.' },
   { emoji: '📜', label: 'Regelmaker', description: '{spiller} lager en ny regel som gjelder resten av kvelden. Bryter du den, drikker du.' },
   { emoji: '👍', label: 'Tommelmester', description: '{spiller} kan når som helst legge tommelen på bordet. Den siste som følger etter, drikker.' },
-  { emoji: '😇', label: 'Nødt eller sannhet', description: '{spiller} velger nødt eller sannhet. Nekter du – drikk 3 slurker.' },
   { emoji: '🤝', label: 'Skål med naboen', description: '{spiller} og naboene på hver side skåler og drikker.' },
   { emoji: '👉', label: 'Mest sannsynlig', description: '{spiller} spør «Hvem er mest sannsynlig til å ...». På tre peker alle – den med flest fingre drikker.' },
   { emoji: '🔥', label: 'Drikk 4 slurker', description: 'Auda! {spiller} drikker 4 slurker.' },
